@@ -104,7 +104,7 @@ LEGACY_RUN_ATTRS = [
 
 RUNS_PER_GROUP = 20
 
-FILTERABLE = [
+STATUS_FILTERS = [
     ("completed", "status_completed"),
     ("error", "status_error"),
     ("pending", "status_pending"),
@@ -129,6 +129,7 @@ def runs_for_args(args, ctx=None):
 
 
 def filtered_runs(args, ctx=None):
+    _check_filter_runs_args(args)
     if getattr(args, "remote", None):
         return remote_impl_support.filtered_runs(args)
     try:
@@ -183,9 +184,10 @@ def _runs_filter(args, ctx):
 
 
 def _apply_status_filter(args, filters):
+    name = "!attr" if getattr(args, "status_negate", False) else "attr"
     status_filters = [
-        var.run_filter("attr", "status", status)
-        for status, args_attr in FILTERABLE
+        var.run_filter(name, "status", status)
+        for status, args_attr in STATUS_FILTERS
         if getattr(args, args_attr, False)
     ]
     if status_filters:
@@ -480,6 +482,13 @@ def _check_list_runs_args(args, ctx):
         ctx,
     )
 
+def _check_filter_runs_args(args):
+    if (
+        getattr(args, "status_negate", False)
+        and [getattr(args, filter, False) for _, filter in STATUS_FILTERS].count(True)
+        != 1
+    ):
+        cli.error("--not can only be used with exactly one status filter at a time")
 
 def _list_runs(args, ctx):
     if args.archive and not os.path.exists(args.archive):

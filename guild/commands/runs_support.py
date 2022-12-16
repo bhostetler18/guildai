@@ -459,6 +459,12 @@ def status_filters(fn):
                 callback=_apply_status_chars,
             ),
             click.Option(
+                ("-Sn", "--not", "status_negate"),
+                help="Negates a status filter.",
+                is_flag=True,
+                callback=_apply_status_chars,
+            ),
+            click.Option(
                 # Used by _apply_status_chars to implicitly set status
                 # flags using one or more chars.
                 ("-S", "status_chars"),
@@ -495,7 +501,7 @@ def _validate_status_chars(ctx, _param, value):
     if not value:
         return value
     for char in value:
-        if char not in "rcetps":
+        if char not in "rcetpsn":
             raise SystemExit(
                 f"unrecognized status char '{char}' in option '-S'\n"
                 f"Try '{ctx.command_path} --help' for more information."
